@@ -1,20 +1,4 @@
-const firebaseConfig = {
 
-  apiKey: "AIzaSyBZoWEkvbT_NhIOoEye8dZA4fbrCc4VbUk",
-
-  authDomain: "dashboard-1b866.firebaseapp.com",
-
-  projectId: "dashboard-1b866",
-
-  storageBucket: "dashboard-1b866.firebasestorage.app",
-
-  messagingSenderId: "245705220261",
-
-  appId: "1:245705220261:web:91c26c131c699dcbe26d4c",
-
-  measurementId: "G-0P1C6TXHSG"
-
-};
 
 
 // Initialize Firebase
