@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Progress Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-code"></i> Coding Progress Tracker</h1>
+            <button id="themeToggle" class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="dashboard">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </button>
+            <button class="tab-btn" data-tab="cses">
+                <i class="fas fa-puzzle-piece"></i> CSES (400)
+            </button>
+            <button class="tab-btn" data-tab="codeforces">
+                <i class="fas fa-trophy"></i> Codeforces
+            </button>
+            <button class="tab-btn" data-tab="courses">
+                <i class="fas fa-graduation-cap"></i> Courses
+            </button>
+            <button class="tab-btn" data-tab="routine">
+                <i class="fas fa-calendar-check"></i> Daily Routine
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3><i class="fas fa-puzzle-piece"></i> CSES Progress</h3>
+                    <div class="progress-summary">
+                        <div class="progress-circle">
+                            <span id="csesPercentage">0%</span>
+                        </div>
+                        <p><span id="csesSolved">0</span>/400 problems solved</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-trophy"></i> Codeforces Journey</h3>
+                    <div class="cf-stats">
+                        <p>Current Goal: <strong>Expert</strong></p>
+                        <p>Problems Solved: <span id="cfSolved">0</span></p>
+                        <p>Contests: <span id="cfContests">0</span></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-graduation-cap"></i> Course Progress</h3>
+                    <div class="course-summary">
+                        <div class="mini-progress">
+                            <span>TensorFlow</span>
+                            <div class="mini-bar">
+                                <div class="mini-fill" id="tfMini"></div>
+                            </div>
+                            <span id="tfPercent">0%</span>
+                        </div>
+                        <div class="mini-progress">
+                            <span>GFG DSA</span>
+                            <div class="mini-bar">
+                                <div class="mini-fill" id="gfgMini"></div>
+                            </div>
+                            <span id="gfgPercent">0%</span>
+                        </div>
+                        <div class="mini-progress">
+                            <span>Coding Blocks</span>
+                            <div class="mini-bar">
+                                <div class="mini-fill" id="cbMini"></div>
+                            </div>
+                            <span id="cbPercent">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-fire"></i> Today's Progress</h3>
+                    <div class="today-stats">
+                        <p>Streak: <span id="currentStreak">0</span> days</p>
+                        <p>Today's Tasks: <span id="todayCompleted">0</span>/<span id="todayTotal">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSES Tab -->
+        <div class="tab-content" id="cses">
+            <div class="section-header">
+                <h2>CSES Problem Set Progress</h2>
+                <div class="cses-stats">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="csesProgressFill"></div>
+                        </div>
+                        <span class="progress-text">
+                            <span id="csesCounter">0</span>/400 problems solved (<span id="csesProgressText">0%</span>)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input type="text" id="csesSearch" placeholder="Search problems...">
+                <select id="csesFilter">
+                    <option value="all">All Categories</option>
+                    <option value="Introductory Problems">Introductory Problems</option>
+                    <option value="Sorting and Searching">Sorting and Searching</option>
+                    <option value="Dynamic Programming">Dynamic Programming</option>
+                    <option value="Graph Algorithms">Graph Algorithms</option>
+                    <option value="Range Queries">Range Queries</option>
+                    <option value="Tree Algorithms">Tree Algorithms</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="String Algorithms">String Algorithms</option>
+                    <option value="Geometry">Geometry</option>
+                    <option value="Advanced Techniques">Advanced Techniques</option>
+                </select>
+                <button id="addCsesProblem" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add Problem
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table id="csesTable">
+                    <thead>
+                        <tr>
+                            <th>Problem</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Solution Approach</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="csesTableBody">
+                        <!-- Problems will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Codeforces Tab -->
+        <div class="tab-content" id="codeforces">
+            <div class="section-header">
+                <h2>Codeforces Expert Journey</h2>
+                <p>Goal: Reach Expert Rating (1600+)</p>
+            </div>
+            <!-- Add this to your Codeforces tab, right after the section-header -->
+            <div class="cf-sync-section">
+                <div class="sync-controls">
+                    <input type="text" id="cfUsername" placeholder="Enter your Codeforces username (e.g., iwrsu)" value="">
+                    <button id="syncCfBtn" class="btn-primary">
+                        <i class="fas fa-sync-alt"></i> Sync with Codeforces
+                    </button>
+                </div>
+                <div class="sync-info">
+                    <span id="lastSync">Never synced</span>
+                    <span id="syncStatus"></span>
+                </div>
+            </div>
+
+            <!-- NEW: Codeforces Account Integration -->
+            <div class="cf-account-section">
+                <div class="account-controls">
+                    <div class="username-input">
+                        <label for="cfUsername">Codeforces Username:</label>
+                        <input type="text" id="cfUsername" placeholder="Enter your CF handle" value="iwrsu">
+                    </div>
+                    <button id="syncCfProblems" class="btn-secondary">
+                        <i class="fas fa-sync-alt"></i> Sync with Codeforces
+                    </button>
+                </div>
+                <div class="sync-status" id="syncStatus">
+                    <span id="lastSyncTime"></span>
+                    <span id="syncMessage"></span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input type="text" id="cfSearch" placeholder="Search contests/problems...">
+                <select id="cfDivFilter">
+                    <option value="all">All Divisions</option>
+                    <option value="Div. 1">Div. 1</option>
+                    <option value="Div. 2">Div. 2</option>
+                    <option value="Div. 3">Div. 3</option>
+                    <option value="Div. 4">Div. 4</option>
+                    <option value="Educational">Educational</option>
+                </select>
+                <select id="cfProblemFilter">
+                    <option value="all">All Problems</option>
+                    <option value="A">Problem A</option>
+                    <option value="B">Problem B</option>
+                    <option value="C">Problem C</option>
+                    <option value="D">Problem D</option>
+                    <option value="E">Problem E</option>
+                    <option value="F">Problem F</option>
+                </select>
+                <button id="addCfProblem" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add Contest Problem
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table id="cfTable">
+                    <thead>
+                        <tr>
+                            <th>Contest</th>
+                            <th>Division</th>
+                            <th>Problem</th>
+                            <th>Problem Name</th>
+                            <th>Learning Notes</th>
+                            <th>Tricks/Approach</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cfTableBody">
+                        <!-- Contest problems will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Courses Tab -->
+        <div class="tab-content" id="courses">
+            <div class="section-header">
+                <h2>Learning Courses Progress</h2>
+            </div>
+
+            <div class="courses-grid">
+                <!-- TensorFlow Course -->
+                <div class="course-card">
+                    <h3><i class="fab fa-tensorflow"></i> TensorFlow Course</h3>
+                    <div class="course-progress">
+                        <div class="slider-container">
+                            <input type="range" id="tfSlider" min="0" max="50" value="0" class="progress-slider">
+                            <div class="slider-labels">
+                                <span>0</span>
+                                <span>25</span>
+                                <span>50</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tfProgress"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span>Modules: <span id="tfModules">0</span>/50</span>
+                            <span>Progress: <span id="tfProgressPercent">0%</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GFG DSA Course -->
+                <div class="course-card">
+                    <h3><i class="fas fa-code"></i> GFG DSA Course</h3>
+                    <div class="course-progress">
+                        <div class="slider-container">
+                            <input type="range" id="gfgSlider" min="0" max="32" value="0" class="progress-slider">
+                            <div class="slider-labels">
+                                <span>0</span>
+                                <span>16</span>
+                                <span>32</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="gfgProgress"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span>Modules: <span id="gfgModules">0</span>/32</span>
+                            <span>Progress: <span id="gfgProgressPercent">0%</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coding Blocks Course -->
+                <div class="course-card">
+                    <h3><i class="fas fa-laptop-code"></i> Coding Blocks CP</h3>
+                    <div class="course-progress">
+                        <div class="slider-container">
+                            <input type="range" id="cbSlider" min="0" max="75" value="0" class="progress-slider">
+                            <div class="slider-labels">
+                                <span>0</span>
+                                <span>37</span>
+                                <span>75</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cbProgress"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span>Modules: <span id="cbModules">0</span>/75</span>
+                            <span>Progress: <span id="cbProgressPercent">0%</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Routine Tab -->
+        <div class="tab-content" id="routine">
+            <div class="section-header">
+                <h2>🗓 Daily Routine Tracker</h2>
+                <button id="duplicateDay" class="btn-primary">
+                    <i class="fas fa-copy"></i> Duplicate Today's Block
+                </button>
+            </div>
+
+            <div id="routineContainer">
+                <!-- Daily routine blocks will be added here -->
+            </div>
+
+            <button id="addRoutineDay" class="btn-secondary">
+                <i class="fas fa-plus"></i> Add New Day
+            </button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="csesModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add CSES Problem</h3>
+            <form id="csesForm">
+                <input type="text" id="csesProblemName" placeholder="Problem Name" required>
+                <select id="csesProblemCategory" required>
+                    <option value="">Select Category</option>
+                    <option value="Introductory Problems">Introductory Problems</option>
+                    <option value="Sorting and Searching">Sorting and Searching</option>
+                    <option value="Dynamic Programming">Dynamic Programming</option>
+                    <option value="Graph Algorithms">Graph Algorithms</option>
+                    <option value="Range Queries">Range Queries</option>
+                    <option value="Tree Algorithms">Tree Algorithms</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="String Algorithms">String Algorithms</option>
+                    <option value="Geometry">Geometry</option>
+                    <option value="Advanced Techniques">Advanced Techniques</option>
+                </select>
+                <textarea id="csesProblemNotes" placeholder="Learning notes and concepts..."></textarea>
+                <textarea id="csesProblemApproach" placeholder="Solution approach and techniques..."></textarea>
+                <button type="submit" class="btn-primary">Add Problem</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="cfModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add Codeforces Contest Problem</h3>
+            <form id="cfForm">
+                <input type="text" id="cfContestName" placeholder="Contest Name" required>
+                <select id="cfDivision" required>
+                    <option value="">Select Division</option>
+                    <option value="Div. 1">Div. 1</option>
+                    <option value="Div. 2">Div. 2</option>
+                    <option value="Div. 3">Div. 3</option>
+                    <option value="Div. 4">Div. 4</option>
+                    <option value="Educational">Educational</option>
+                </select>
+                <select id="cfProblemId" required>
+                    <option value="">Select Problem</option>
+                    <option value="A">Problem A</option>
+                    <option value="B">Problem B</option>
+                    <option value="C">Problem C</option>
+                    <option value="D">Problem D</option>
+                    <option value="E">Problem E</option>
+                    <option value="F">Problem F</option>
+                </select>
+                <input type="text" id="cfProblemNameInput" placeholder="Problem Name" required>
+                <textarea id="cfLearningNotes" placeholder="What did you learn from this problem?"></textarea>
+                <textarea id="cfTricks" placeholder="Tricks, techniques, and approaches used..."></textarea>
+                <button type="submit" class="btn-primary">Add Problem</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
