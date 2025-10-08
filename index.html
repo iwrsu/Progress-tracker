@@ -6,8 +6,23 @@
     <title>Coding Progress Tracker</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase App -->
+    <script src="https://www.gstatic.com/firebasejs/9.29.0/firebase-app-compat.js"></script>
+    <!-- Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.29.0/firebase-firestore-compat.js"></script>
+    <!-- Optional: Auth if you want multiple users later -->
+    <script src="https://www.gstatic.com/firebasejs/9.29.0/firebase-auth-compat.js"></script>
+
 </head>
 <body>
+    <div class="username-input">
+        <label for="usernameInput">Codeforces Username:</label>
+        <input type="text" id="usernameInput" placeholder="Enter username">
+    </div>
+    <div id="tasksContainer" class="routine-tasks"></div>
+    <input type="text" id="newTaskInput" placeholder="New task">
+    <button onclick="addTask(document.getElementById('newTaskInput').value)">Add Task</button>
+
     <div class="container">
         <header>
             <h1><i class="fas fa-code"></i> Coding Progress Tracker</h1>
