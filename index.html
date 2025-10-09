@@ -17,11 +17,27 @@
     <input type="text" id="usernameInput" placeholder="Enter username">
   </div>
 
-  <div id="tasksContainer" class="routine-tasks"></div>
-  <input type="text" id="newTaskInput" placeholder="New task" />
-  <button onclick="addTask(document.getElementById('newTaskInput').value)">Add Task</button>
-
   <div class="container">
+    <!-- Quick Access Section -->
+    <div class="dashboard">
+      <!-- CSES Progress Bar -->
+      <div class="card">
+        <h3>CSES Progress</h3>
+        <div class="progress-bar">
+          <div class="progress-fill" id="csesBar"></div>
+        </div>
+        <p><span id="csesSolved">0</span>/400 problems solved (<span id="csesPercent">0%</span>)</p>
+        <button id="csesAddBtn">Mark Problem Solved</button>
+      </div>
+
+      <!-- Task Management -->
+      <div class="card">
+        <h3>Daily Tasks</h3>
+        <div id="taskList" class="routine-tasks"></div>
+        <input type="text" id="taskInput" placeholder="New task" />
+        <button id="addTaskBtn">Add Task</button>
+      </div>
+    </div>
     <header>
       <h1><i class="fas fa-code"></i> Coding Progress Tracker</h1>
       <button id="themeToggle" class="theme-toggle">

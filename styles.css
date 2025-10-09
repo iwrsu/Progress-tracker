@@ -1,9 +1,35 @@
+:root {
+  --primary-color: #6c63ff;
+  --secondary-color: #FFC107;
+  --success-color: #4CAF50;
+  --danger-color: #F44336;
+  --warning-color: #FF9800;
+  --bg-color: #f7f8fa;
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --border-color: #e0e0e0;
+  --shadow: 0 4px 8px rgba(0,0,0,0.1);
+  --hover-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  --border-radius: 0.5rem;
+  --transition: all 0.3s ease;
+}
+
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --card-bg: #2d2d2d;
+  --text-color: #ffffff;
+  --border-color: #444444;
+  --shadow: 0 2px 10px rgba(0,0,0,0.3);
+  --hover-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
-  background: #f7f8fa;
-  color: #333;
+  background: var(--bg-color);
+  color: var(--text-color);
   text-align: center;
+  transition: var(--transition);
 }
 
 header {
@@ -512,6 +538,7 @@ tr:hover {
     outline: none;
     cursor: pointer;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 .progress-slider::-webkit-slider-thumb {

@@ -104,44 +104,47 @@ function renderTasks(tasks) {
   window.currentTasks = tasks;
 }
 
-window.toggleTask = async function(index) {
-  if (!window.currentTasks) return;
-  window.currentTasks[index].done = !window.currentTasks[index].done;
-  await saveTasks(window.currentTasks);
-  renderTasks(window.currentTasks);
+window.toggleTask = async (index) => {
+  const tasks = window.currentTasks;
+  tasks[index].done = !tasks[index].done;
+  renderTasks(tasks);
+  await saveTasks(tasks);
 };
 
-window.deleteTask = async function(index) {
-  if (!window.currentTasks) return;
-  window.currentTasks.splice(index, 1);
-  await saveTasks(window.currentTasks);
-  renderTasks(window.currentTasks);
-};
-
-window.addTask = async function(text) {
-  if (!text.trim()) return;
-  if (!window.currentTasks) window.currentTasks = [];
-  window.currentTasks.push({ text: text.trim(), done: false });
-  await saveTasks(window.currentTasks);
-  renderTasks(window.currentTasks);
-  if (taskInput) taskInput.value = "";
+window.deleteTask = async (index) => {
+  const tasks = window.currentTasks;
+  tasks.splice(index, 1);
+  renderTasks(tasks);
+  await saveTasks(tasks);
 };
 
 if (addTaskBtn && taskInput) {
-  addTaskBtn.addEventListener("click", () => {
-    window.addTask(taskInput.value);
+  addTaskBtn.addEventListener("click", async () => {
+    const text = taskInput.value.trim();
+    if (!text) return;
+    const tasks = window.currentTasks || [];
+    tasks.push({ text, done: false });
+    taskInput.value = "";
+    renderTasks(tasks);
+    await saveTasks(tasks);
   });
   
-  taskInput.addEventListener("keypress", (e) => {
+  taskInput.addEventListener("keypress", async (e) => {
     if (e.key === "Enter") {
-      window.addTask(taskInput.value);
+      const text = taskInput.value.trim();
+      if (!text) return;
+      const tasks = window.currentTasks || [];
+      tasks.push({ text, done: false });
+      taskInput.value = "";
+      renderTasks(tasks);
+      await saveTasks(tasks);
     }
   });
 }
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async function() {
-    loadState();
+    await loadState();
     await loadCsesProgress();
     await loadTasks();
     setupEventListeners();
@@ -153,20 +156,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     initializeCodeforcesSync();
 });
 
-// State management functions
-function saveState() {
-    localStorage.setItem('codingProgressTracker', JSON.stringify(state));
+// Firebase State management functions
+async function saveState() {
+    try {
+        const ref = doc(db, "state", "userState");
+        await setDoc(ref, state);
+        console.log('State saved to Firebase');
+    } catch (error) {
+        console.error('Error saving state to Firebase:', error);
+    }
 }
 
-function loadState() {
-    const saved = localStorage.getItem('codingProgressTracker');
-    if (saved) {
-        try {
-            const loadedState = JSON.parse(saved);
-            state = { ...state, ...loadedState };
-        } catch (e) {
-            console.error('Error loading state:', e);
+async function loadState() {
+    try {
+        const ref = doc(db, "state", "userState");
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+            const firebaseState = snap.data();
+            state = { ...state, ...firebaseState };
+            console.log('State loaded from Firebase');
+        } else {
+            // Initialize with default state
+            await saveState();
+            console.log('Initialized default state in Firebase');
         }
+    } catch (error) {
+        console.error('Error loading state from Firebase:', error);
     }
 }
 
@@ -1077,7 +1092,7 @@ function renderRoutineDays() {
                     <div class="task-item ${task.completed ? 'completed' : ''}">
                         <input type="checkbox" class="task-checkbox" 
                                ${task.completed ? 'checked' : ''}
-                               onchange="toggleTask(${day.id}, ${task.id})">
+                               onchange="toggleRoutineTask(${day.id}, ${task.id})">
                         <label class="task-label">${escapeHtml(task.text)}</label>
                     </div>
                 `).join('')}
@@ -1110,7 +1125,7 @@ window.changeDayType = function(dayId, type) {
     }
 }
 
-window.toggleTask = function(dayId, taskId) {
+window.toggleRoutineTask = function(dayId, taskId) {
     const day = state.routine.days.find(d => d.id === dayId);
     if (day) {
         const task = day.tasks.find(t => t.id === taskId);
@@ -1183,3 +1198,7 @@ if (document.readyState === 'loading') {
         initializeCodeforcesSync();
     })();
 }
+
+// Initial load
+loadCsesProgress();
+loadTasks();
