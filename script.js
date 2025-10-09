@@ -1,3 +1,9 @@
+// Firebase imports
+import { db } from "./firebaseConfig.js";
+import {
+  doc, getDoc, setDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
 // Global state management
 let state = {
     cses: {
@@ -21,9 +27,123 @@ let state = {
     theme: 'light'
 };
 
+// ---------- CSES PROGRESS ----------
+const csesBar = document.getElementById("csesBar");
+const csesSolved = document.getElementById("csesSolved");
+const csesPercent = document.getElementById("csesPercent");
+const csesAddBtn = document.getElementById("csesAddBtn");
+
+// Firebase CSES Progress Functions
+async function loadCsesProgress() {
+  const ref = doc(db, "progress", "cses");
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    const { solved, total } = snap.data();
+    updateCsesUI(solved, total);
+    state.cses.solved = solved;
+  } else {
+    await setDoc(ref, { solved: 0, total: 400 });
+    state.cses.solved = 0;
+  }
+}
+
+function updateCsesUI(solved, total) {
+  const percent = Math.round((solved / total) * 100);
+  if (csesBar) csesBar.style.width = `${percent}%`;
+  if (csesSolved) csesSolved.textContent = solved;
+  if (csesPercent) csesPercent.textContent = `${percent}%`;
+}
+
+async function incrementCses() {
+  const ref = doc(db, "progress", "cses");
+  const snap = await getDoc(ref);
+  let { solved, total } = snap.data();
+  solved++;
+  if (solved > total) solved = total;
+  await updateDoc(ref, { solved });
+  updateCsesUI(solved, total);
+  state.cses.solved = solved;
+}
+
+if (csesAddBtn) {
+  csesAddBtn.addEventListener("click", incrementCses);
+}
+
+// ---------- TASKS ----------
+const taskList = document.getElementById("taskList");
+const taskInput = document.getElementById("taskInput");
+const addTaskBtn = document.getElementById("addTaskBtn");
+
+async function loadTasks() {
+  const ref = doc(db, "data", "tasks");
+  const snap = await getDoc(ref);
+  if (snap.exists()) renderTasks(snap.data().tasks || []);
+  else await setDoc(ref, { tasks: [] });
+}
+
+async function saveTasks(tasks) {
+  const ref = doc(db, "data", "tasks");
+  await setDoc(ref, { tasks });
+}
+
+function renderTasks(tasks) {
+  if (!taskList) return;
+  taskList.innerHTML = "";
+  tasks.forEach((t, i) => {
+    const div = document.createElement("div");
+    div.className = "task" + (t.done ? " done" : "");
+    div.innerHTML = `
+      <span>${t.text}</span>
+      <div>
+        <button onclick="toggleTask(${i})">✔</button>
+        <button onclick="deleteTask(${i})">🗑</button>
+      </div>
+    `;
+    taskList.appendChild(div);
+  });
+  window.currentTasks = tasks;
+}
+
+window.toggleTask = async function(index) {
+  if (!window.currentTasks) return;
+  window.currentTasks[index].done = !window.currentTasks[index].done;
+  await saveTasks(window.currentTasks);
+  renderTasks(window.currentTasks);
+};
+
+window.deleteTask = async function(index) {
+  if (!window.currentTasks) return;
+  window.currentTasks.splice(index, 1);
+  await saveTasks(window.currentTasks);
+  renderTasks(window.currentTasks);
+};
+
+window.addTask = async function(text) {
+  if (!text.trim()) return;
+  if (!window.currentTasks) window.currentTasks = [];
+  window.currentTasks.push({ text: text.trim(), done: false });
+  await saveTasks(window.currentTasks);
+  renderTasks(window.currentTasks);
+  if (taskInput) taskInput.value = "";
+};
+
+if (addTaskBtn && taskInput) {
+  addTaskBtn.addEventListener("click", () => {
+    window.addTask(taskInput.value);
+  });
+  
+  taskInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      window.addTask(taskInput.value);
+    }
+  });
+}
+
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     loadState();
+    await loadCsesProgress();
+    await loadTasks();
     setupEventListeners();
     setupTabs();
     updateDashboard();
@@ -382,19 +502,19 @@ function filterCsesTable() {
     renderCsesTable();
 }
 
-function toggleCsesProblemStatus(id) {
+window.toggleCsesProblemStatus = async function(id) {
     const problem = state.cses.problems.find(p => p.id === id);
     if (problem) {
         problem.status = problem.status === 'solved' ? 'unsolved' : 'solved';
         state.cses.solved = state.cses.problems.filter(p => p.status === 'solved').length;
         saveState();
         renderCsesTable();
-        updateCsesProgress();
+        await updateCsesProgress();
         updateDashboard();
     }
 }
 
-function editCsesProblem(id) {
+window.editCsesProblem = function(id) {
     const problem = state.cses.problems.find(p => p.id === id);
     if (problem) {
         const nameEl = document.getElementById('csesProblemName');
@@ -417,16 +537,16 @@ function editCsesProblem(id) {
     }
 }
 
-function deleteCsesProblem(id) {
+window.deleteCsesProblem = async function(id) {
     state.cses.problems = state.cses.problems.filter(p => p.id !== id);
     state.cses.solved = state.cses.problems.filter(p => p.status === 'solved').length;
     saveState();
     renderCsesTable();
-    updateCsesProgress();
+    await updateCsesProgress();
     updateDashboard();
 }
 
-function updateCsesProgress() {
+async function updateCsesProgress() {
     const percentage = Math.round((state.cses.solved / 400) * 100);
     
     const progressFill = document.getElementById('csesProgressFill');
@@ -443,6 +563,10 @@ function updateCsesProgress() {
     if (progressText) {
         progressText.textContent = `${percentage}%`;
     }
+    
+    // Also update Firebase
+    const ref = doc(db, "progress", "cses");
+    await updateDoc(ref, { solved: state.cses.solved });
 }
 
 // Codeforces Functions
@@ -528,7 +652,7 @@ function filterCfTable() {
     renderCfTable();
 }
 
-function editCfProblem(id) {
+window.editCfProblem = function(id) {
     const problem = state.codeforces.problems.find(p => p.id === id);
     if (problem) {
         const contestEl = document.getElementById('cfContestName');
@@ -554,7 +678,7 @@ function editCfProblem(id) {
     }
 }
 
-function deleteCfProblem(id) {
+window.deleteCfProblem = function(id) {
     state.codeforces.problems = state.codeforces.problems.filter(p => p.id !== id);
     saveState();
     renderCfTable();
@@ -962,7 +1086,7 @@ function renderRoutineDays() {
     `).join('');
 }
 
-function changeDayType(dayId, type) {
+window.changeDayType = function(dayId, type) {
     const day = state.routine.days.find(d => d.id === dayId);
     if (day && day.type !== type) {
         day.type = type;
@@ -986,7 +1110,7 @@ function changeDayType(dayId, type) {
     }
 }
 
-function toggleTask(dayId, taskId) {
+window.toggleTask = function(dayId, taskId) {
     const day = state.routine.days.find(d => d.id === dayId);
     if (day) {
         const task = day.tasks.find(t => t.id === taskId);
@@ -1000,7 +1124,7 @@ function toggleTask(dayId, taskId) {
     }
 }
 
-function removeRoutineDay(dayId) {
+window.removeRoutineDay = function(dayId) {
     if (confirm('Are you sure you want to remove this day?')) {
         state.routine.days = state.routine.days.filter(d => d.id !== dayId);
         saveState();
@@ -1041,17 +1165,21 @@ function isToday(dateString) {
 
 // Initialize everything when page loads
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         // Already handled above
     });
 } else {
     // DOM is already loaded
-    loadState();
-    setupEventListeners();
-    setupTabs();
-    updateDashboard();
-    setupCourseSliders();
-    initializeRoutine();
-    applyTheme();
-    initializeCodeforcesSync();
+    (async function() {
+        loadState();
+        await loadCsesProgress();
+        await loadTasks();
+        setupEventListeners();
+        setupTabs();
+        updateDashboard();
+        setupCourseSliders();
+        initializeRoutine();
+        applyTheme();
+        initializeCodeforcesSync();
+    })();
 }
