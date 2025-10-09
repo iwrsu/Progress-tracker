@@ -38,11 +38,18 @@ async function loadCsesProgress() {
   const ref = doc(db, "progress", "cses");
   const snap = await getDoc(ref);
   if (snap.exists()) {
-    const { solved, total } = snap.data();
+        const { solved, total, initialized } = snap.data();
+        // One-time migration/reset to ensure counter is 0 after accidental increments
+        if (!initialized) {
+            await setDoc(ref, { solved: 0, total: total ?? 400, initialized: true }, { merge: true });
+            updateCsesUI(0, total ?? 400);
+            state.cses.solved = 0;
+            return;
+        }
     updateCsesUI(solved, total);
     state.cses.solved = solved;
   } else {
-    await setDoc(ref, { solved: 0, total: 400 });
+        await setDoc(ref, { solved: 0, total: 400, initialized: true });
     state.cses.solved = 0;
   }
 }
@@ -52,6 +59,14 @@ function updateCsesUI(solved, total) {
   if (csesBar) csesBar.style.width = `${percent}%`;
   if (csesSolved) csesSolved.textContent = solved;
   if (csesPercent) csesPercent.textContent = `${percent}%`;
+  
+  // Also update dashboard elements
+  const csesPercentage = document.getElementById('csesPercentage');
+  if (csesPercentage) csesPercentage.textContent = `${percent}%`;
+  
+  // Update dashboard csesSolved if it's different from the main one
+  const dashboardCsesSolved = document.getElementById('csesSolved');
+  if (dashboardCsesSolved) dashboardCsesSolved.textContent = solved;
 }
 
 async function incrementCses() {
@@ -65,9 +80,27 @@ async function incrementCses() {
   state.cses.solved = solved;
 }
 
-if (csesAddBtn) {
-  csesAddBtn.addEventListener("click", incrementCses);
+async function decrementCses() {
+  const ref = doc(db, "progress", "cses");
+  const snap = await getDoc(ref);
+  let { solved, total } = snap.data();
+  solved--;
+  if (solved < 0) solved = 0;
+  await updateDoc(ref, { solved });
+  updateCsesUI(solved, total);
+  state.cses.solved = solved;
 }
+
+async function resetCses() {
+  if (confirm('Are you sure you want to reset the CSES counter to 0?')) {
+    const ref = doc(db, "progress", "cses");
+    await updateDoc(ref, { solved: 0 });
+    updateCsesUI(0, 400);
+    state.cses.solved = 0;
+  }
+}
+
+// CSES controls have been removed from UI; listeners intentionally omitted
 
 // ---------- TASKS ----------
 const taskList = document.getElementById("taskList");
@@ -187,7 +220,10 @@ async function loadState() {
 
 // Theme management
 function applyTheme() {
+    console.log('Applying theme:', state.theme);
     document.body.setAttribute('data-theme', state.theme);
+    document.documentElement.setAttribute('data-theme', state.theme);
+    
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         const icon = themeToggle.querySelector('i');
@@ -202,11 +238,16 @@ function setupEventListeners() {
     // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
+        console.log('Theme toggle button found, adding event listener');
         themeToggle.addEventListener('click', () => {
+            console.log('Theme toggle clicked, current theme:', state.theme);
             state.theme = state.theme === 'light' ? 'dark' : 'light';
+            console.log('New theme:', state.theme);
             applyTheme();
             saveState();
         });
+    } else {
+        console.log('Theme toggle button not found');
     }
 
     // CSES events
@@ -1178,27 +1219,4 @@ function isToday(dateString) {
     return dateString === today;
 }
 
-// Initialize everything when page loads
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', async function() {
-        // Already handled above
-    });
-} else {
-    // DOM is already loaded
-    (async function() {
-        loadState();
-        await loadCsesProgress();
-        await loadTasks();
-        setupEventListeners();
-        setupTabs();
-        updateDashboard();
-        setupCourseSliders();
-        initializeRoutine();
-        applyTheme();
-        initializeCodeforcesSync();
-    })();
-}
-
-// Initial load
-loadCsesProgress();
-loadTasks();
+// Note: Single initialization handled earlier on DOMContentLoaded

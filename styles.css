@@ -33,9 +33,17 @@ body {
 }
 
 header {
-  background: linear-gradient(90deg, #6c63ff, #48bfe3);
-  color: white;
-  padding: 1rem;
+    background: linear-gradient(90deg, #6c63ff, #48bfe3);
+    color: var(--text-on-primary, #fff);
+    padding: 1rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .dashboard {
@@ -47,7 +55,7 @@ header {
 }
 
 .card {
-  background: white;
+    background: var(--card-bg);
   border-radius: 1rem;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 1.5rem;
@@ -55,11 +63,11 @@ header {
 }
 
 .progress-bar {
-  width: 100%;
-  height: 12px;
-  background: #ddd;
-  border-radius: 6px;
-  margin: 0.5rem 0 0.5rem 0;
+    width: 100%;
+    height: 12px;
+    background: var(--border-color);
+    border-radius: 6px;
+    margin: 0.5rem 0 0.5rem 0;
 }
 
 .progress-fill {
@@ -71,8 +79,8 @@ header {
 }
 
 button {
-  background: #6c63ff;
-  color: white;
+    background: var(--primary-color);
+    color: #fff;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -95,7 +103,7 @@ footer {
 }
 
 .task {
-  background: #f1f1f1;
+    background: var(--card-bg);
   padding: 0.4rem 0.8rem;
   border-radius: 0.4rem;
   display: flex;
@@ -110,24 +118,27 @@ footer {
 }
 
 header h1 {
-    color: var(--primary-color);
+    color: #fff;
     font-size: 2.5rem;
     font-weight: 600;
+    margin: 0;
 }
 
 .theme-toggle {
-    background: var(--primary-color);
-    color: white;
-    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
     padding: 10px 15px;
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 1.2rem;
     transition: var(--transition);
+    backdrop-filter: blur(10px);
 }
 
 .theme-toggle:hover {
-    background: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.45);
 }
 
 /* Tab Navigation */
@@ -311,7 +322,60 @@ header h1 {
     border-color: var(--primary-color);
 }
 
-.sync-status {
+/* Daily Tasks Section in Routine Tab */
+.daily-tasks-section {
+    margin-bottom: 2rem;
+}
+
+.daily-tasks-section .card {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.task-list {
+    margin: 1rem 0;
+    min-height: 100px;
+}
+
+.add-task-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.add-task-form input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.add-task-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cses-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.cses-controls button {
+  font-size: 0.85rem;
+  padding: 8px 12px;
+}.sync-status {
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid var(--border-color);
@@ -459,12 +523,21 @@ header h1 {
 table {
     width: 100%;
     border-collapse: collapse;
+    background: var(--card-bg);
+    color: var(--text-color);
 }
 
 th, td {
     padding: 15px 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+}
+th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
 }
 
 th {
@@ -787,6 +860,16 @@ tr:hover {
     
     header h1 {
         font-size: 2rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .theme-toggle {
+        align-self: center;
     }
     
     .tab-nav {

@@ -12,37 +12,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.29.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="username-input">
-    <label for="usernameInput">Codeforces Username:</label>
-    <input type="text" id="usernameInput" placeholder="Enter username">
-  </div>
-
   <div class="container">
-    <!-- Quick Access Section -->
-    <div class="dashboard">
-      <!-- CSES Progress Bar -->
-      <div class="card">
-        <h3>CSES Progress</h3>
-        <div class="progress-bar">
-          <div class="progress-fill" id="csesBar"></div>
-        </div>
-        <p><span id="csesSolved">0</span>/400 problems solved (<span id="csesPercent">0%</span>)</p>
-        <button id="csesAddBtn">Mark Problem Solved</button>
-      </div>
-
-      <!-- Task Management -->
-      <div class="card">
-        <h3>Daily Tasks</h3>
-        <div id="taskList" class="routine-tasks"></div>
-        <input type="text" id="taskInput" placeholder="New task" />
-        <button id="addTaskBtn">Add Task</button>
-      </div>
-    </div>
     <header>
-      <h1><i class="fas fa-code"></i> Coding Progress Tracker</h1>
-      <button id="themeToggle" class="theme-toggle">
-        <i class="fas fa-moon"></i>
-      </button>
+      <div class="header-content">
+        <h1><i class="fas fa-code"></i> Coding Progress Tracker</h1>
+        <button id="themeToggle" class="theme-toggle">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
     </header>
 
     <!-- Navigation -->
@@ -165,33 +142,19 @@
         <p>Goal: Reach Expert Rating (1600+)</p>
       </div>
       
-      <!-- Add this to your Codeforces tab, right after the section-header -->
-      <div class="cf-sync-section">
-        <div class="sync-controls">
-          <input type="text" id="cfUsername" placeholder="Enter your Codeforces username (e.g., iwrsu)" value="">
-          <button id="syncCfBtn" class="btn-primary">
-            <i class="fas fa-sync-alt"></i> Sync with Codeforces
-          </button>
-        </div>
-        <div class="sync-info">
-          <span id="lastSync">Never synced</span>
-          <span id="syncStatus"></span>
-        </div>
-      </div>
-
-      <!-- NEW: Codeforces Account Integration -->
+      <!-- Codeforces Account Integration -->
       <div class="cf-account-section">
         <div class="account-controls">
           <div class="username-input">
             <label for="cfUsername">Codeforces Username:</label>
-            <input type="text" id="cfUsername" placeholder="Enter your CF handle" value="iwrsu">
+            <input type="text" id="cfUsername" placeholder="Enter your CF handle" value="">
           </div>
-          <button id="syncCfProblems" class="btn-secondary">
+          <button id="syncCfBtn" class="btn-primary">
             <i class="fas fa-sync-alt"></i> Sync with Codeforces
           </button>
         </div>
-        <div class="sync-status" id="syncStatus">
-          <span id="lastSyncTime"></span>
+        <div class="sync-status">
+          <span id="lastSyncTime">Never synced</span>
           <span id="syncMessage"></span>
         </div>
       </div>
@@ -319,9 +282,25 @@
     <div class="tab-content" id="routine">
       <div class="section-header">
         <h2>🗓 Daily Routine Tracker</h2>
-        <button id="duplicateDay" class="btn-primary">
-          <i class="fas fa-copy"></i> Duplicate Today's Block
-        </button>
+        <div class="header-actions">
+          <button id="duplicateDay" class="btn-primary">
+            <i class="fas fa-copy"></i> Duplicate Today's Block
+          </button>
+        </div>
+      </div>
+
+      <!-- Daily Tasks Management -->
+      <div class="daily-tasks-section">
+        <div class="card">
+          <h3><i class="fas fa-tasks"></i> Daily Tasks</h3>
+          <div id="taskList" class="task-list"></div>
+          <div class="add-task-form">
+            <input type="text" id="taskInput" placeholder="Add a new daily task..." />
+            <button id="addTaskBtn" class="btn-primary">
+              <i class="fas fa-plus"></i> Add Task
+            </button>
+          </div>
+        </div>
       </div>
 
       <div id="routineContainer">
