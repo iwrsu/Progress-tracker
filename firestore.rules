@@ -1,0 +1,31 @@
+/**
+ * Firestore Security Rules
+ * 
+ * Simple rules allowing public read/write access.
+ * Security is handled at the application level through client-side password verification.
+ * 
+ * WARNING: These rules allow anyone to read/write data if they bypass the UI.
+ * This is suitable for personal projects where convenience > security.
+ * 
+ * For production use, consider:
+ * - Server-side authentication
+ * - User-based access controls  
+ * - Rate limiting
+ * - Input validation
+ * 
+ * @author iwrsu
+ * Status: Website works for now
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      // Public read access - anyone can view the data
+      allow read: if true;
+      // Public write access (protected by client-side password gate)
+      // WARNING: This allows any client to write if they bypass the UI
+      // The security relies on the client-side password verification
+      allow write: if true;
+    }
+  }
+}

@@ -1,8 +1,35 @@
-// Firebase imports
+/**
+ * Coding Progress Tracker - Main Application Script
+ * 
+ * A comprehensive dashboard for tracking coding progress across:
+ * - CSES Problem Set (400 problems)
+ * - Codeforces contests and problems  
+ * - Learning courses (TensorFlow, GFG DSA, Coding Blocks)
+ * - Daily routine and task management
+ * 
+ * Features:
+ * - Firebase Firestore for real-time data sync
+ * - Password-protected editing (client-side verification)
+ * - Dark/light theme support
+ * - Codeforces API integration for automatic sync
+ * - Responsive design with modern UI
+ * 
+ * Security: Uses client-side password hashing for edit protection.
+ * Note: This provides basic protection but can be bypassed by determined users.
+ * 
+ * @author iwrsu
+ * @version 1.0
+ * Status: Website works for now
+ */
+
+// Firebase imports - only Firestore needed (no Auth)
 import { db } from "./firebaseConfig.js";
 import {
   doc, getDoc, setDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+// Import private configuration (not committed to version control)
+import { EDIT_PASSWORD_HASH, EDIT_TRUST_KEY } from "./config.js";
 
 // Global state management
 let state = {
@@ -24,7 +51,8 @@ let state = {
     routine: {
         days: []
     },
-    theme: 'light'
+    theme: 'light',
+    editAccess: false
 };
 
 // ---------- CSES PROGRESS ----------
@@ -138,14 +166,18 @@ function renderTasks(tasks) {
 }
 
 window.toggleTask = async (index) => {
-  const tasks = window.currentTasks;
+    const ok = await ensureEditAccess('Mark task as done/undone?');
+    if (!ok) return;
+    const tasks = window.currentTasks;
   tasks[index].done = !tasks[index].done;
   renderTasks(tasks);
   await saveTasks(tasks);
 };
 
 window.deleteTask = async (index) => {
-  const tasks = window.currentTasks;
+    const ok = await ensureEditAccess('Delete this task?');
+    if (!ok) return;
+    const tasks = window.currentTasks;
   tasks.splice(index, 1);
   renderTasks(tasks);
   await saveTasks(tasks);
@@ -153,6 +185,8 @@ window.deleteTask = async (index) => {
 
 if (addTaskBtn && taskInput) {
   addTaskBtn.addEventListener("click", async () => {
+        const ok = await ensureEditAccess('Add a new task?');
+        if (!ok) return;
     const text = taskInput.value.trim();
     if (!text) return;
     const tasks = window.currentTasks || [];
@@ -164,6 +198,8 @@ if (addTaskBtn && taskInput) {
   
   taskInput.addEventListener("keypress", async (e) => {
     if (e.key === "Enter") {
+            const ok = await ensureEditAccess('Add a new task?');
+            if (!ok) return;
       const text = taskInput.value.trim();
       if (!text) return;
       const tasks = window.currentTasks || [];
@@ -233,6 +269,83 @@ function applyTheme() {
     }
 }
 
+// ---------------- Edit Guard (Step-up verification) ----------------
+// Password-based edit gate (no Firebase Auth)
+// Password hash is now imported from config.js (not committed to version control)
+// This provides better security by keeping the hash out of the public repository
+
+function hasEditAccessCached() {
+    const until = localStorage.getItem(EDIT_TRUST_KEY);
+    if (!until) return false;
+    const expires = parseInt(until, 10);
+    return Date.now() < expires;
+}
+
+function cacheEditAccess(hours = 720) { // default 30 days
+    const ms = hours * 60 * 60 * 1000;
+    localStorage.setItem(EDIT_TRUST_KEY, (Date.now() + ms).toString());
+}
+
+async function ensureEditAccess(confirmMessage = 'This action changes data. Proceed?') {
+    if (!confirm(confirmMessage)) return false; // accidental edit guard
+
+    if (hasEditAccessCached()) return true;
+
+    // Show verify modal
+    const modal = document.getElementById('verifyModal');
+    if (modal) modal.style.display = 'block';
+
+    return new Promise((resolve) => {
+        const form = document.getElementById('verifyForm');
+        const passwordInput = document.getElementById('verifyPassword');
+        const statusEl = document.getElementById('verifyStatus');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+
+        const cleanup = () => {
+            if (modal) modal.style.display = 'none';
+            form?.removeEventListener('submit', onSubmit);
+            cancelBtn?.removeEventListener('click', onCancel);
+        };
+
+        const onCancel = () => { cleanup(); resolve(false); };
+
+        async function hashText(text) {
+            const enc = new TextEncoder();
+            const data = enc.encode(text);
+            const digest = await crypto.subtle.digest('SHA-256', data);
+            const bytes = new Uint8Array(digest);
+            return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function onSubmit(e) {
+            e.preventDefault();
+            const pwd = passwordInput?.value || '';
+            if (!pwd) return;
+            try {
+                verifyBtn.disabled = true;
+                if (statusEl) statusEl.textContent = 'Verifying...';
+                const hashed = await hashText(pwd);
+                if (hashed === EDIT_PASSWORD_HASH) {
+                    cacheEditAccess();
+                    cleanup();
+                    resolve(true);
+                } else {
+                    if (statusEl) statusEl.textContent = 'Incorrect password.';
+                    verifyBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                if (statusEl) statusEl.textContent = 'Verification failed.';
+                verifyBtn.disabled = false;
+            }
+        }
+
+        form?.addEventListener('submit', onSubmit);
+        cancelBtn?.addEventListener('click', onCancel);
+    });
+}
+
 // Event listeners setup
 function setupEventListeners() {
     // Theme toggle
@@ -253,7 +366,9 @@ function setupEventListeners() {
     // CSES events
     const addCsesBtn = document.getElementById('addCsesProblem');
     if (addCsesBtn) {
-        addCsesBtn.addEventListener('click', () => {
+            addCsesBtn.addEventListener('click', async () => {
+                const ok = await ensureEditAccess('You are about to add a CSES problem. Continue?');
+                if (!ok) return;
             const modal = document.getElementById('csesModal');
             if (modal) {
                 modal.style.display = 'block';
@@ -263,7 +378,11 @@ function setupEventListeners() {
 
     const csesForm = document.getElementById('csesForm');
     if (csesForm) {
-        csesForm.addEventListener('submit', handleCsesSubmit);
+        csesForm.addEventListener('submit', async (e) => {
+            const ok = await ensureEditAccess('Submit this CSES problem?');
+            if (!ok) { e.preventDefault(); return; }
+            handleCsesSubmit(e);
+        });
     }
 
     const csesSearch = document.getElementById('csesSearch');
@@ -279,7 +398,9 @@ function setupEventListeners() {
     // Codeforces events
     const addCfBtn = document.getElementById('addCfProblem');
     if (addCfBtn) {
-        addCfBtn.addEventListener('click', () => {
+            addCfBtn.addEventListener('click', async () => {
+                const ok = await ensureEditAccess('You are about to add a Codeforces contest problem. Continue?');
+                if (!ok) return;
             const modal = document.getElementById('cfModal');
             if (modal) {
                 modal.style.display = 'block';
@@ -289,7 +410,11 @@ function setupEventListeners() {
 
     const cfForm = document.getElementById('cfForm');
     if (cfForm) {
-        cfForm.addEventListener('submit', handleCfSubmit);
+        cfForm.addEventListener('submit', async (e) => {
+            const ok = await ensureEditAccess('Submit this Codeforces entry?');
+            if (!ok) { e.preventDefault(); return; }
+            handleCfSubmit(e);
+        });
     }
 
     const cfSearch = document.getElementById('cfSearch');
@@ -315,7 +440,11 @@ function setupEventListeners() {
 
     const addRoutineBtn = document.getElementById('addRoutineDay');
     if (addRoutineBtn) {
-        addRoutineBtn.addEventListener('click', addRoutineDay);
+            addRoutineBtn.addEventListener('click', async () => {
+                const ok = await ensureEditAccess('Add a new routine day?');
+                if (!ok) return;
+                addRoutineDay();
+            });
     }
 
     // Modal close events
@@ -559,6 +688,8 @@ function filterCsesTable() {
 }
 
 window.toggleCsesProblemStatus = async function(id) {
+    const ok = await ensureEditAccess('Toggle problem solved status?');
+    if (!ok) return;
     const problem = state.cses.problems.find(p => p.id === id);
     if (problem) {
         problem.status = problem.status === 'solved' ? 'unsolved' : 'solved';
@@ -594,6 +725,8 @@ window.editCsesProblem = function(id) {
 }
 
 window.deleteCsesProblem = async function(id) {
+    const ok = await ensureEditAccess('Delete this CSES problem?');
+    if (!ok) return;
     state.cses.problems = state.cses.problems.filter(p => p.id !== id);
     state.cses.solved = state.cses.problems.filter(p => p.status === 'solved').length;
     saveState();
@@ -751,14 +884,31 @@ function initializeCodeforcesSync() {
     }
     
     if (cfUsernameEl) {
-        cfUsernameEl.addEventListener('change', (e) => {
-            state.codeforces.username = e.target.value;
+        cfUsernameEl.addEventListener('change', async (e) => {
+            const newVal = e.target.value.trim();
+            const DEFAULT_CF_HANDLE = 'iwrsu';
+            if (newVal && newVal !== DEFAULT_CF_HANDLE && !hasEditAccessCached()) {
+                const ok = await ensureEditAccess('Change Codeforces handle?');
+                if (!ok) {
+                    e.target.value = state.codeforces.username || DEFAULT_CF_HANDLE;
+                    return;
+                }
+            }
+            state.codeforces.username = newVal;
             saveState();
         });
     }
     
     if (syncBtn) {
-        syncBtn.addEventListener('click', syncWithCodeforces);
+        syncBtn.addEventListener('click', async () => {
+            const handle = (document.getElementById('cfUsername')?.value || '').trim();
+            const DEFAULT_CF_HANDLE = 'iwrsu';
+            if (handle && handle !== DEFAULT_CF_HANDLE && !hasEditAccessCached()) {
+                const ok = await ensureEditAccess('Sync with Codeforces for a different handle?');
+                if (!ok) return;
+            }
+            await syncWithCodeforces();
+        });
     }
 }
 
@@ -781,7 +931,7 @@ function updateCodeforcesSync() {
 async function syncWithCodeforces() {
     const cfUsernameEl = document.getElementById('cfUsername');
     const syncBtn = document.getElementById('syncCfBtn');
-    const syncStatus = document.getElementById('syncStatus');
+    const syncStatus = document.getElementById('syncMessage');
     
     if (!cfUsernameEl || !cfUsernameEl.value.trim()) {
         showNotification('Please enter your Codeforces username', 'error');
@@ -960,7 +1110,9 @@ function setupCourseSliders() {
     const tfSlider = document.getElementById('tfSlider');
     if (tfSlider) {
         tfSlider.value = state.courses.tensorflow.completed;
-        tfSlider.addEventListener('input', (e) => {
+        tfSlider.addEventListener('input', async (e) => {
+            const ok = await ensureEditAccess('Change TensorFlow course progress?');
+            if (!ok) return;
             updateCourseProgress('tensorflow', parseInt(e.target.value), 50);
         });
     }
@@ -969,7 +1121,9 @@ function setupCourseSliders() {
     const gfgSlider = document.getElementById('gfgSlider');
     if (gfgSlider) {
         gfgSlider.value = state.courses.gfg.completed;
-        gfgSlider.addEventListener('input', (e) => {
+        gfgSlider.addEventListener('input', async (e) => {
+            const ok = await ensureEditAccess('Change GFG course progress?');
+            if (!ok) return;
             updateCourseProgress('gfg', parseInt(e.target.value), 32);
         });
     }
@@ -978,12 +1132,13 @@ function setupCourseSliders() {
     const cbSlider = document.getElementById('cbSlider');
     if (cbSlider) {
         cbSlider.value = state.courses.codingBlocks.completed;
-        cbSlider.addEventListener('input', (e) => {
+        cbSlider.addEventListener('input', async (e) => {
+            const ok = await ensureEditAccess('Change Coding Blocks course progress?');
+            if (!ok) return;
             updateCourseProgress('codingBlocks', parseInt(e.target.value), 75);
         });
     }
 
-    // Initialize displays
     updateCourseDisplay('tensorflow', 'tf', 50);
     updateCourseDisplay('gfg', 'gfg', 32);
     updateCourseDisplay('codingBlocks', 'cb', 75);

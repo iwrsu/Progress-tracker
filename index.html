@@ -1,3 +1,18 @@
+<!--
+  Coding Progress Tracker - Main HTML Structure
+  
+  A comprehensive dashboard for tracking coding progress with:
+  - Tabbed interface for different sections (Dashboard, CSES, Codeforces, Courses, Routine)
+  - Modal dialogs for adding problems and verifying edit access
+  - Responsive design with modern CSS and Font Awesome icons
+  - Firebase integration for real-time data sync
+  
+  Security: Password-protected editing through modal verification
+  Theme: Support for dark/light mode switching
+  
+  @author iwrsu
+  Status: Website works for now
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,7 +169,7 @@
           </button>
         </div>
         <div class="sync-status">
-          <span id="lastSyncTime">Never synced</span>
+          <span id="lastSync">Never synced</span>
           <span id="syncMessage"></span>
         </div>
       </div>
@@ -314,6 +329,24 @@
   </div>
 
   <!-- Modals -->
+  <!-- Verify Access Modal -->
+  <div id="verifyModal" class="modal">
+    <div class="modal-content">
+      <span class="close" data-close-modal="verifyModal">&times;</span>
+      <h3>Verify Edit Access</h3>
+      <p>Enter the edit password to enable edits on this browser.</p>
+      <form id="verifyForm">
+        <input type="password" id="verifyPassword" placeholder="Enter password" required />
+        <button type="submit" class="btn-primary" id="verifyBtn">
+          <i class="fas fa-unlock"></i> Verify
+        </button>
+        <button type="button" class="btn-secondary" id="cancelEditBtn">
+          <i class="fas fa-ban"></i> Cancel
+        </button>
+      </form>
+      <div class="sync-status" id="verifyStatus"></div>
+    </div>
+  </div>
   <div id="csesModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>

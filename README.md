@@ -2,6 +2,30 @@
 
 A comprehensive web application to track your coding journey including CSES problems, Codeforces contests, courses, and daily routines.
 
+## 🔒 SECURITY MODEL
+
+**Status: Website works for now**
+
+This application uses **client-side password protection** with improved security:
+
+### Security Features:
+- **Private Config**: Password hash stored in `config.js` (not committed to GitHub)
+- **Git Protection**: Sensitive files excluded via `.gitignore`
+- **Firebase Deployment**: Hash stays secure on your server, not in public repo
+- **UI-Level Protection**: Prevents accidental edits
+
+### Security Limitations:
+- **Still Client-Side**: Hash is downloaded to user's browser when they visit the site
+- **No Server Auth**: Anyone can view network requests and find the hash
+- **Protection Level**: Deters casual users but not determined attackers
+
+### For Production Use:
+- Implement server-side authentication (Firebase Auth, custom backend)
+- Use environment variables for secrets
+- Add proper access controls and rate limiting
+
+This approach provides reasonable security for personal projects while being much better than hardcoded secrets in the repository.
+
 ## 📁 Project Structure
 
 ```
@@ -14,11 +38,21 @@ A comprehensive web application to track your coding journey including CSES prob
 
 ## 🔧 Setup Instructions
 
-### 1. Firebase Setup
+### 1. Clone and Configure
+1. Clone the repository
+2. Copy `config.sample.js` to `config.js`
+3. Generate your password hash:
+   ```bash
+   node -e "console.log(require('crypto').createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
+   ```
+4. Update `config.js` with your hash
+
+### 2. Firebase Setup
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Create a new project or use existing project
 3. Enable Firestore Database
-4. Update `firebaseConfig.js` with your project credentials (already configured)
+4. Install Firebase CLI: `npm install -g firebase-tools`
+5. Login: `firebase login`
 
 ### 2. Hosting Options
 

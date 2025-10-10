@@ -1,3 +1,24 @@
+/**
+ * Coding Progress Tracker - Styles
+ * 
+ * Modern CSS with CSS custom properties for theming support.
+ * Features:
+ * - CSS Variables for easy theme switching (light/dark modes)
+ * - Responsive design with mobile-first approach
+ * - Card-based layout with subtle shadows and gradients
+ * - Smooth transitions and hover effects
+ * - Table styling for data display
+ * - Modal dialogs and form styling
+ * - Progress bars and sliders
+ * 
+ * Theme Support: Light and dark modes via data-theme attribute
+ * Layout: CSS Grid and Flexbox for modern responsive design
+ * 
+ * @author iwrsu
+ * Status: Website works for now
+ */
+
+/* CSS Custom Properties - Light Theme (Default) */
 :root {
   --primary-color: #6c63ff;
   --secondary-color: #FFC107;
