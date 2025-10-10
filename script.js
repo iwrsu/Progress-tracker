@@ -381,7 +381,7 @@ function setupEventListeners() {
         csesForm.addEventListener('submit', async (e) => {
             const ok = await ensureEditAccess('Submit this CSES problem?');
             if (!ok) { e.preventDefault(); return; }
-            handleCsesSubmit(e);
+            await handleCsesSubmit(e);
         });
     }
 
@@ -488,6 +488,7 @@ function setupTabs() {
             // Trigger specific tab initialization
             if (targetTab === 'cses') {
                 renderCsesTable();
+                updateCsesProgress(); // Ensure counter is accurate when switching to CSES tab
             } else if (targetTab === 'codeforces') {
                 renderCfTable();
                 updateCodeforcesSync();
@@ -606,7 +607,7 @@ function calculateStreak() {
 }
 
 // CSES Functions
-function handleCsesSubmit(e) {
+async function handleCsesSubmit(e) {
     e.preventDefault();
     
     const nameEl = document.getElementById('csesProblemName');
@@ -627,6 +628,8 @@ function handleCsesSubmit(e) {
     };
     
     state.cses.problems.push(problem);
+    // Update solved count from problems array
+    state.cses.solved = state.cses.problems.filter(p => p.status === 'solved').length;
     saveState();
     
     const modal = document.getElementById('csesModal');
@@ -640,7 +643,7 @@ function handleCsesSubmit(e) {
     }
     
     renderCsesTable();
-    updateCsesProgress();
+    await updateCsesProgress();
     updateDashboard();
 }
 
@@ -736,7 +739,11 @@ window.deleteCsesProblem = async function(id) {
 }
 
 async function updateCsesProgress() {
-    const percentage = Math.round((state.cses.solved / 400) * 100);
+    // Calculate solved count from the problems array (this is the accurate count)
+    const actualSolvedCount = state.cses.problems.filter(p => p.status === 'solved').length;
+    state.cses.solved = actualSolvedCount;
+    
+    const percentage = Math.round((actualSolvedCount / 400) * 100);
     
     const progressFill = document.getElementById('csesProgressFill');
     if (progressFill) {
@@ -745,7 +752,7 @@ async function updateCsesProgress() {
     
     const counter = document.getElementById('csesCounter');
     if (counter) {
-        counter.textContent = state.cses.solved;
+        counter.textContent = actualSolvedCount;
     }
     
     const progressText = document.getElementById('csesProgressText');
@@ -753,9 +760,9 @@ async function updateCsesProgress() {
         progressText.textContent = `${percentage}%`;
     }
     
-    // Also update Firebase
+    // Sync with Firebase for consistency
     const ref = doc(db, "progress", "cses");
-    await updateDoc(ref, { solved: state.cses.solved });
+    await updateDoc(ref, { solved: actualSolvedCount });
 }
 
 // Codeforces Functions
