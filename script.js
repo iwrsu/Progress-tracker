@@ -828,6 +828,13 @@ function renderCfTable() {
         return matchesSearch && matchesDiv && matchesProblem;
     });
     
+    // Sort by date added - newest first
+    filteredProblems.sort((a, b) => {
+        const dateA = new Date(a.dateAdded);
+        const dateB = new Date(b.dateAdded);
+        return dateB - dateA; // Newest first (descending order)
+    });
+    
     tbody.innerHTML = filteredProblems.map(problem => `
         <tr>
             <td>${escapeHtml(problem.contest)} ${problem.source === 'api' ? '<span style="color: var(--success-color); font-size: 0.8em;">🔄 Auto</span>' : ''}</td>
